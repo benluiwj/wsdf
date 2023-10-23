@@ -27,7 +27,6 @@ pub(crate) enum DataRoot<'a> {
 pub(crate) struct DataRootConfig {
     pre_dissect: Vec<syn::Path>,
     post_dissect: Vec<syn::Path>,
-    heuristic_fn: Vec<syn::Path>,
 }
 
 #[derive(Debug)]
@@ -60,7 +59,6 @@ impl DataRoot<'_> {
                 &format_ident!("dissect"),
                 &cfg.pre_dissect,
                 &cfg.post_dissect,
-                &cfg.heuristic_fn,
             ),
             DataRoot::Enum { variants, cfg, .. } => {
                 // Each variant gets its own local dissection function, and we'll store their
@@ -101,7 +99,6 @@ impl DataRoot<'_> {
                                 &func_ident,
                                 &cfg.pre_dissect,
                                 &cfg.post_dissect,
-                                &cfg.heuristic_fn,
                             )
                         });
 
@@ -266,7 +263,6 @@ impl<'a> DataRoot<'a> {
         let cfg = DataRootConfig {
             pre_dissect: opts.pre_dissect,
             post_dissect: opts.post_dissect,
-            heuristic_fn: opts.heuristic_fn,
         };
 
         match &input.data {
@@ -729,11 +725,9 @@ impl DataTerminal<'_> {
         fn_ident: &syn::Ident,
         pre_dissect: &[syn::Path],
         post_dissect: &[syn::Path],
-        heuristic_fn: &[syn::Path],
     ) -> syn::ItemFn {
         let pre_dissect = Self::call_hooks(pre_dissect);
         let post_dissect = Self::call_hooks(post_dissect);
-        let heuristic_fn = Self::call_hooks(heuristic_fn);
 
         let update_parent = self.update_parent_node(root).streamify();
 

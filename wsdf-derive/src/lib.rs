@@ -110,6 +110,13 @@ fn derive_protocol_impl(input: &syn::DeriveInput) -> syn::Result<proc_macro2::To
     let proto_name = proto_opts.proto_name.as_ref().unwrap_or(&upper_cased);
     let proto_filter = proto_opts.proto_filter.as_ref().unwrap_or(&snake_cased);
     let is_heuristic = proto_opts.heuristic.as_ref().unwrap_or(&false);
+    let mut heuristic_fn = &Vec::new();
+    if *is_heuristic {
+        heuristic_fn = proto_opts
+            .heuristic_fn
+            .as_ref()
+            .expect("Heuristic attribute defined without heuristic function");
+    }
 
     let proto_desc_cstr: syn::Expr = cstr!(proto_desc);
     let proto_name_cstr: syn::Expr = cstr!(proto_name);

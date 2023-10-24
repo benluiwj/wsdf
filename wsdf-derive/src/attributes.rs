@@ -32,7 +32,6 @@ pub(crate) struct ProtocolOptions {
     pub(crate) proto_name: Option<String>,
     pub(crate) proto_filter: Option<String>,
     pub(crate) heuristic: Option<bool>,
-    pub(crate) heuristic_fn: Option<Vec<syn::Path>>,
 }
 
 /// Options for anything which can derive ProtocolField.
@@ -178,9 +177,14 @@ impl OptionBuilder for ProtocolOptions {
                     // Because we have Protocol : ProtocolField and they all share the same
                     // #[wsdf(...)] look.
                     META_PRE_DISSECT | META_POST_DISSECT => (),
-                    META_HEURISTIC_FN => self.heuristic_fn = Some(parse_strings(&nv.value)?),
-                    META_HEURISTIC => self.heuristic = Some(true),
                     _ => return make_err(meta, "unrecognized attribute"),
+                },
+            },
+            syn::Meta::Path(path) => match path.get_ident() {
+                None => return make_err(meta, "expected identifier"),
+                Some(ident) => match ident.to_string().as_str() {
+                    META_HEURISTIC => self.heuristic = Some(true),
+                    _ => return make_err(meta, " unrecognized attribute"),
                 },
             },
             _ => return make_err(meta, "unexpected meta item"),
@@ -200,6 +204,15 @@ impl OptionBuilder for ProtocolFieldOptions {
                     // These meta items belong to ProtocolOptions. But they may appear in the same
                     // list of attributes.
                     META_PROTO_DESC | META_PROTO_NAME | META_PROTO_FILTER | META_DECODE_FROM => (),
+                    _ => return make_err(meta, "unrecognized attribute"),
+                },
+            },
+            // Heuristic attribute is similar to the save attribute from FieldOptions, but we want it at the
+            // ProtocolOptions level. So we do something similar to the above for META_PROTO_DESC, etc.
+            syn::Meta::Path(path) => match path.get_ident() {
+                None => return make_err(meta, "expected identifier"),
+                Some(ident) => match ident.to_string().as_str() {
+                    META_HEURISTIC => (),
                     _ => return make_err(meta, "unrecognized attribute"),
                 },
             },
@@ -400,7 +413,6 @@ const META_RENAME: &str = "rename";
 const META_PRE_DISSECT: &str = "pre_dissect";
 const META_POST_DISSECT: &str = "post_dissect";
 const META_HEURISTIC: &str = "heuristic";
-const META_HEURISTIC_FN: &str = "heuristic_fn";
 
 /// Extracts all the meta items from a list of attributes.
 pub(crate) fn get_meta_items(attrs: &[&syn::Attribute]) -> syn::Result<Vec<syn::Meta>> {

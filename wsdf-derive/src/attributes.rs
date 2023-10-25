@@ -31,7 +31,6 @@ pub(crate) struct ProtocolOptions {
     pub(crate) proto_desc: Option<String>,
     pub(crate) proto_name: Option<String>,
     pub(crate) proto_filter: Option<String>,
-    pub(crate) heuristic: Option<bool>,
 }
 
 /// Options for anything which can derive ProtocolField.
@@ -39,6 +38,7 @@ pub(crate) struct ProtocolOptions {
 pub(crate) struct ProtocolFieldOptions {
     pub(crate) pre_dissect: Vec<syn::Path>,
     pub(crate) post_dissect: Vec<syn::Path>,
+    #[cfg(feature = "heuristic")]
     pub(crate) heuristic_fn: Vec<syn::Path>,
 }
 
@@ -181,13 +181,6 @@ impl OptionBuilder for ProtocolOptions {
                     _ => return make_err(meta, "unrecognized attribute"),
                 },
             },
-            syn::Meta::Path(path) => match path.get_ident() {
-                None => return make_err(meta, "expected identifier"),
-                Some(ident) => match ident.to_string().as_str() {
-                    META_HEURISTIC => self.heuristic = Some(true),
-                    _ => return make_err(meta, " unrecognized attribute"),
-                },
-            },
             _ => return make_err(meta, "unexpected meta item"),
         };
         Ok(())
@@ -202,6 +195,7 @@ impl OptionBuilder for ProtocolFieldOptions {
                 Some(ident) => match ident.to_string().as_str() {
                     META_PRE_DISSECT => self.pre_dissect = parse_strings(&nv.value)?,
                     META_POST_DISSECT => self.post_dissect = parse_strings(&nv.value)?,
+                    #[cfg(feature = "heuristic")]
                     META_HEURISTIC_FN => self.heuristic_fn = parse_strings(&nv.value)?,
                     // These meta items belong to ProtocolOptions. But they may appear in the same
                     // list of attributes.

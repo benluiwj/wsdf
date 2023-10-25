@@ -11,13 +11,15 @@ fn heuristic_f() -> bool {
 }
 
 #[derive(Protocol)]
-#[wsdf(
-    proto_desc = "Baby udp HD by wsdf",
-    proto_name = "Baby udp HD",
-    proto_filter = "baby_udp_hd",
-    decode_from = [("ip.proto", 17)],
-    heuristic,
-    heuristic_fn = "heuristic_f"
+#[cfg_attr(
+    feature = "heuristic",
+    wsdf(
+        proto_desc = "Baby udp HD by wsdf",
+        proto_name = "Baby udp HD",
+        proto_filter = "baby_udp_hd",
+        decode_from = [("ip.proto", 17)],
+        heuristic_fn = "heuristic_f"
+    )
 )]
 struct BabyUDPHD {
     source_port: u16,
